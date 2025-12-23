@@ -15,7 +15,7 @@ app.use(cors({
   origin: function (origin, callback) {
     const allowed = [
       "http://localhost:5173",
-
+      "https://pick-and-drop-2723.netlify.app"
     ];
     if (!origin) return callback(null, true);
     if (allowed.includes(origin)) return callback(null, true);
