@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const GRAB_COOLDOWN = 10000;
 const USER_ID = 'id1';
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://grab-and-drop.onrender.com';
 const CONFIDENCE_THRESHOLD = 0.7;
 
 const HomePage = ({ currentGesture, gestureConfidence }) => {
