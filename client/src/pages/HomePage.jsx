@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+import { buildApiUrl, shouldTriggerGesture } from "../lib";
 
 const GRAB_COOLDOWN = 10000;
 const USER_ID = 'id1';
-const API_URL = 'https://grab-and-drop.onrender.com';
 const CONFIDENCE_THRESHOLD = 0.7;
 
 const HomePage = ({ currentGesture, gestureConfidence }) => {
@@ -27,7 +27,7 @@ const HomePage = ({ currentGesture, gestureConfidence }) => {
     formData.append('userId', USER_ID);
 
     try {
-      const response = await fetch(`${API_URL}/upload`, {
+      const response = await fetch(buildApiUrl("/upload"), {
         method: "POST",
         body: formData
       });
@@ -47,15 +47,17 @@ const HomePage = ({ currentGesture, gestureConfidence }) => {
   }
 
   useEffect(() => {
-    const timeSinceLastGrab = Date.now() - lastGrabTime.current;
+    const shouldGrab = shouldTriggerGesture({
+      currentGesture,
+      expectedGesture: "grab",
+      confidence: gestureConfidence,
+      threshold: CONFIDENCE_THRESHOLD,
+      lastTime: lastGrabTime.current,
+      cooldownMs: GRAB_COOLDOWN,
+      disabled: !selectedImage || isGrabbing || hasGrabbed,
+    });
 
-    if(currentGesture === 'grab' && 
-      gestureConfidence > CONFIDENCE_THRESHOLD &&
-      selectedImage &&
-      !isGrabbing &&
-      !hasGrabbed &&
-      timeSinceLastGrab > GRAB_COOLDOWN
-    ) {
+    if (shouldGrab) {
       handleGrab();
     }
   }, [currentGesture, gestureConfidence, selectedImage, isGrabbing, hasGrabbed]);
