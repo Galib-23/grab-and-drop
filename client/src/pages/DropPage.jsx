@@ -1,11 +1,11 @@
 import { ArrowDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { buildApiUrl, shouldTriggerGesture } from "../lib";
 
 
 const DROP_COOLDOWN = 10000;
 const RECEIVER_ID = 'id2';
-const API_URL = 'https://grab-and-drop.onrender.com';
 const CONFIDENCE_THRESHOLD = 0.7;
 
 const DropPage = ({ currentGesture, gestureConfidence }) => {
@@ -22,13 +22,13 @@ const DropPage = ({ currentGesture, gestureConfidence }) => {
     setIsDropping(true);
 
     try {
-      const response = await fetch(`${API_URL}/drop/${RECEIVER_ID}`);
+      const response = await fetch(buildApiUrl(`/drop/${RECEIVER_ID}`));
       const data = await response.json();
 
       if (data.success && data.imagePath) {
-        console.log(`${API_URL}${data.imagePath}`);
+        console.log(buildApiUrl(data.imagePath));
         setTimeout(() => {
-          setReceivedImage(`${API_URL}${data.imagePath}`)
+          setReceivedImage(buildApiUrl(data.imagePath))
           setIsDropping(false);
           setHasDropped(true);
         }, 1000);
@@ -46,14 +46,17 @@ const DropPage = ({ currentGesture, gestureConfidence }) => {
   }
 
   useEffect(() => {
-    const timeSinceLastDrop = Date.now() - lastDropTime.current;
-    if (currentGesture === 'drop' &&
-      gestureConfidence > CONFIDENCE_THRESHOLD &&
-      !isDropping &&
-      !hasDropped &&
-      !receivedImage &&
-      timeSinceLastDrop > DROP_COOLDOWN
-    ) {
+    const shouldDrop = shouldTriggerGesture({
+      currentGesture,
+      expectedGesture: "drop",
+      confidence: gestureConfidence,
+      threshold: CONFIDENCE_THRESHOLD,
+      lastTime: lastDropTime.current,
+      cooldownMs: DROP_COOLDOWN,
+      disabled: isDropping || hasDropped || receivedImage,
+    });
+
+    if (shouldDrop) {
       handleDrop();
     }
   }, [currentGesture, gestureConfidence, isDropping, hasDropped, receivedImage]);
